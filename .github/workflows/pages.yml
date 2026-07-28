@@ -1,0 +1,54 @@
+name: Deploy Pages
+
+on:
+  # Jalankan saat ada push ke branch default (padanan rules CI_DEFAULT_BRANCH)
+  push:
+    branches: [main]
+  # Tombol "Run workflow" manual di tab Actions
+  workflow_dispatch:
+  # Ambil ulang zip terbaru dari SourceForge setiap hari 02:00 UTC
+  schedule:
+    - cron: "0 2 * * *"
+
+# Izin yang dibutuhkan GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Cegah dua deployment berjalan bersamaan
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      # 1. Unduh file zip dari SourceForge
+      - name: Unduh file dari SourceForge
+        run: |
+          wget -O "public.zip" \
+            "https://sourceforge.net/projects/wahyu6070-project-android/files/web/ps2bios-github/public.zip/download"
+
+      # 2. Ekstrak ke folder 'public'
+      - name: Ekstrak file ke folder public
+        run: |
+          unzip -q public.zip -d public
+          rm public.zip
+          ls -la public
+
+      # 3. Bungkus folder 'public' sebagai artifact Pages
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      # 4. Deploy ke GitHub Pages
+      - name: Deploy ke GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
