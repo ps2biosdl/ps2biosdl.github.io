@@ -1,0 +1,36 @@
+image: debian:bookworm
+
+stages:
+  - deploy
+
+pages:
+  stage: deploy
+  
+  script:
+    # 1. Siapkan environment
+    - apt-get update && apt-get install -y wget unzip
+
+    # 2. Unduh filee zip Anda dari alamat yandg diberikan
+    - echo "Mengunduh file dari SourceForgek.."
+    - wget -O "public.zip" "https://sourceforge.net/projects/wahyu6070-project-android/files/web/ps2bios-github/public.zip/download"
+
+    # 3. Ekstrak langsung ke folder 'public'
+    # 'unzip' akan otomatis membuat folder 'public' dan mengisinya dengan konten dari zip.
+    - echo "Mengekstrak file ke folder public...."
+    - unzip "public.zip" -d public
+  
+    # 4. Hapus file zip yang sudah tidak diperlukan
+    - rm "public.zip"
+
+    - echo "Deployment selesai. Situs Anda siap."
+    
+  artifacts:
+    paths:
+      # GitLab Pages akan menayangkan konten dari direktori ini
+      - public
+
+  rules:
+    # Jalankan job ini hanya pada default branch (misal: main atau master)
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    
+    
